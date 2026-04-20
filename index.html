@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Portfolio Tracker</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #222;
+    background: #fafafa;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid #ddd;
+    background: #fff;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 { margin: 0; font-size: 20px; }
+  .totals { display: flex; gap: 24px; align-items: center; font-size: 14px; }
+  .totals span.label { color: #666; margin-right: 6px; }
+  .num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .pos { color: #1a7f37; }
+  .neg { color: #cf222e; }
+  .zero { color: #666; }
+  main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+  }
+  section {
+    background: #fff;
+    border: 1px solid #e4e4e4;
+    border-radius: 6px;
+    padding: 16px;
+  }
+  section h2 { margin: 0 0 12px; font-size: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td {
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+  }
+  th:first-child, td:first-child { text-align: left; }
+  th { font-weight: 600; color: #555; background: #f7f7f7; }
+  tbody tr:hover { background: #fafbfc; }
+  .del {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .del:hover { color: #cf222e; }
+  form.inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+  }
+  input, select, button {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  input[type="number"], input[type="date"] { font-family: ui-monospace, Menlo, monospace; }
+  button {
+    background: #1f6feb;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+  button:hover { background: #1a5ed1; }
+  button.secondary { background: #eee; color: #222; }
+  button.secondary:hover { background: #ddd; }
+  .err { color: #cf222e; font-size: 13px; }
+  .toggle {
+    display: inline-flex;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .toggle button {
+    background: #fff;
+    color: #222;
+    border: none;
+    border-radius: 0;
+    padding: 4px 10px;
+  }
+  .toggle button.active { background: #1f6feb; color: #fff; }
+  #chat-thread {
+    height: 360px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 4px;
+    background: #fcfcfc;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .msg { padding: 8px 10px; border-radius: 6px; max-width: 85%; white-space: pre-wrap; }
+  .msg.user { background: #dbeafe; align-self: flex-end; }
+  .msg.bot { background: #f0f0f0; align-self: flex-start; }
+  .chat-input { display: flex; gap: 8px; margin-top: 10px; }
+  .chat-input input { flex: 1; }
+  .whatif-result { margin-top: 10px; font-size: 14px; font-family: ui-monospace, Menlo, monospace; }
+  td.ticker { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Portfolio Tracker</h1>
+  <div class="totals">
+    <div><span class="label">Total</span><span id="total-value" class="num">—</span></div>
+    <div><span class="label">P/L</span><span id="total-pl" class="num">—</span></div>
+    <div class="toggle">
+      <button id="btn-usd" class="active" onclick="setCurrency('USD')">USD</button>
+      <button id="btn-eur" onclick="setCurrency('EUR')">EUR</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <h2>Holdings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Shares</th>
+          <th>Avg Cost</th>
+          <th>Price</th>
+          <th>Value</th>
+          <th>P/L</th>
+          <th>P/L %</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="holdings-body">
+        <tr><td colspan="8" style="text-align:center;color:#888">Loading…</td></tr>
+      </tbody>
+    </table>
+
+    <form class="inline" id="add-form">
+      <input name="ticker" placeholder="Ticker" required maxlength="16" style="width:90px" list="ticker-list" autocomplete="off" />
+      <datalist id="ticker-list">
+        <option value="AAPL">Apple</option>
+        <option value="MSFT">Microsoft</option>
+        <option value="GOOGL">Alphabet (Class A)</option>
+        <option value="AMZN">Amazon</option>
+        <option value="NVDA">NVIDIA</option>
+        <option value="META">Meta Platforms</option>
+        <option value="TSLA">Tesla</option>
+        <option value="BRK-B">Berkshire Hathaway (B)</option>
+        <option value="JPM">JPMorgan Chase</option>
+        <option value="V">Visa</option>
+        <option value="MA">Mastercard</option>
+        <option value="UNH">UnitedHealth</option>
+        <option value="XOM">Exxon Mobil</option>
+        <option value="WMT">Walmart</option>
+        <option value="COST">Costco</option>
+        <option value="HD">Home Depot</option>
+        <option value="LLY">Eli Lilly</option>
+        <option value="AVGO">Broadcom</option>
+        <option value="ORCL">Oracle</option>
+        <option value="NFLX">Netflix</option>
+        <option value="AMD">AMD</option>
+        <option value="INTC">Intel</option>
+        <option value="DIS">Disney</option>
+        <option value="KO">Coca-Cola</option>
+        <option value="PEP">PepsiCo</option>
+        <option value="SPY">SPDR S&amp;P 500 ETF</option>
+        <option value="QQQ">Invesco QQQ</option>
+        <option value="VTI">Vanguard Total Market</option>
+        <option value="VOO">Vanguard S&amp;P 500</option>
+      </datalist>
+      <input name="shares" type="number" step="any" min="0.0001" placeholder="Shares" required style="width:100px" />
+      <input name="avg_cost" type="number" step="any" min="0.0001" placeholder="Avg cost (USD)" required style="width:140px" />
+      <button type="submit">Add holding</button>
+      <span id="add-err" class="err"></span>
+    </form>
+
+    <h2 style="margin-top:24px">What if…</h2>
+    <form class="inline" id="whatif-form">
+      I'd invested
+      <input name="amount" type="number" step="any" min="1" placeholder="1000" required style="width:100px" />
+      in
+      <input name="ticker" placeholder="AAPL" required maxlength="16" style="width:90px" list="ticker-list" autocomplete="off" />
+      on
+      <input name="date" type="date" required style="width:150px" />
+      <button type="submit">Calculate</button>
+      <span id="whatif-err" class="err"></span>
+    </form>
+    <div id="whatif-result" class="whatif-result"></div>
+  </section>
+
+  <section>
+    <h2>Chat</h2>
+    <div id="chat-thread"></div>
+    <form id="chat-form" class="chat-input">
+      <input name="message" placeholder="Ask about your portfolio…" required autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+  </section>
+</main>
+
+<script>
+let state = {
+  portfolio: null,
+  currency: "USD",
+  rate: 1.0,            // USD -> EUR
+  chat: [],
+};
+
+function fmt(n, currency) {
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  const sym = currency === "EUR" ? "€" : "$";
+  return sym + Number(n).toFixed(2);
+}
+function fmtPct(n) {
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  const sign = n > 0 ? "+" : "";
+  return sign + Number(n).toFixed(2) + "%";
+}
+function plClass(n) {
+  if (n === null || n === undefined || Number.isNaN(n)) return "zero";
+  if (n > 0) return "pos";
+  if (n < 0) return "neg";
+  return "zero";
+}
+function convert(usd) {
+  if (usd === null || usd === undefined) return null;
+  return state.currency === "EUR" ? usd * state.rate : usd;
+}
+
+async function loadPortfolio() {
+  const r = await fetch("/portfolio");
+  state.portfolio = await r.json();
+  render();
+}
+async function loadFx() {
+  try {
+    const r = await fetch("/fx-rate?base=USD&quote=EUR");
+    if (!r.ok) return;
+    const j = await r.json();
+    state.rate = j.rate;
+  } catch {}
+}
+
+function render() {
+  const p = state.portfolio;
+  const cur = state.currency;
+  const body = document.getElementById("holdings-body");
+
+  if (!p || p.holdings.length === 0) {
+    body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888">No holdings yet.</td></tr>';
+  } else {
+    body.innerHTML = p.holdings.map(h => {
+      const price = convert(h.current_price);
+      const value = convert(h.value);
+      const cost = convert(h.avg_cost);
+      const pl = convert(h.pl_absolute);
+      const plc = plClass(h.pl_absolute);
+      return `
+        <tr>
+          <td class="ticker">${h.ticker}</td>
+          <td class="num">${h.shares}</td>
+          <td class="num">${fmt(cost, cur)}</td>
+          <td class="num">${fmt(price, cur)}</td>
+          <td class="num">${fmt(value, cur)}</td>
+          <td class="num ${plc}">${fmt(pl, cur)}</td>
+          <td class="num ${plc}">${fmtPct(h.pl_percent)}</td>
+          <td><button class="del" title="Delete" onclick="deleteHolding(${h.id})">×</button></td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  const totalV = convert(p?.total_value ?? 0);
+  const totalPL = convert(p?.total_pl ?? 0);
+  const totalPct = p?.total_pl_percent ?? 0;
+  document.getElementById("total-value").textContent = fmt(totalV, cur);
+  const plEl = document.getElementById("total-pl");
+  plEl.textContent = `${fmt(totalPL, cur)} (${fmtPct(totalPct)})`;
+  plEl.className = "num " + plClass(p?.total_pl);
+}
+
+function setCurrency(c) {
+  state.currency = c;
+  document.getElementById("btn-usd").classList.toggle("active", c === "USD");
+  document.getElementById("btn-eur").classList.toggle("active", c === "EUR");
+  render();
+}
+
+async function deleteHolding(id) {
+  await fetch(`/holdings/${id}`, { method: "DELETE" });
+  loadPortfolio();
+}
+
+document.getElementById("add-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const errEl = document.getElementById("add-err");
+  errEl.textContent = "";
+  const fd = new FormData(e.target);
+  const body = {
+    ticker: fd.get("ticker").toString().toUpperCase().trim(),
+    shares: parseFloat(fd.get("shares")),
+    avg_cost: parseFloat(fd.get("avg_cost")),
+  };
+  if (!body.ticker || !(body.shares > 0) || !(body.avg_cost > 0)) {
+    errEl.textContent = "Invalid input.";
+    return;
+  }
+  const r = await fetch("/holdings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    errEl.textContent = "Could not add holding.";
+    return;
+  }
+  e.target.reset();
+  loadPortfolio();
+});
+
+document.getElementById("whatif-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const errEl = document.getElementById("whatif-err");
+  const outEl = document.getElementById("whatif-result");
+  errEl.textContent = "";
+  outEl.innerHTML = "";
+  const fd = new FormData(e.target);
+  const ticker = fd.get("ticker").toString().toUpperCase().trim();
+  const amount = parseFloat(fd.get("amount"));
+  const date = fd.get("date").toString();
+  if (!ticker || !(amount > 0) || !date) {
+    errEl.textContent = "Fill in all fields.";
+    return;
+  }
+  const q = new URLSearchParams({ ticker, date, amount: String(amount) });
+  const r = await fetch(`/what-if?${q}`);
+  if (!r.ok) {
+    const msg = (await r.json()).detail || "Error";
+    errEl.textContent = msg;
+    return;
+  }
+  const d = await r.json();
+  const plc = plClass(d.pl_absolute);
+  const dateNote = d.actual_trade_date !== d.date
+    ? ` <span style="color:#888">(first trading day after ${d.date}: ${d.actual_trade_date})</span>`
+    : "";
+  outEl.innerHTML = `
+    $${amount.toFixed(2)} in ${d.ticker} on ${d.date}${dateNote}:
+    bought ${d.shares} shares @ $${d.historical_price.toFixed(2)},
+    now worth <b>$${d.current_value.toFixed(2)}</b>
+    (<span class="${plc}">${d.pl_absolute >= 0 ? "+" : ""}$${d.pl_absolute.toFixed(2)}, ${fmtPct(d.pl_percent)}</span>).
+  `;
+});
+
+function renderChat() {
+  const el = document.getElementById("chat-thread");
+  el.innerHTML = state.chat.map(m =>
+    `<div class="msg ${m.role}">${m.content.replace(/</g, "&lt;")}</div>`
+  ).join("");
+  el.scrollTop = el.scrollHeight;
+}
+
+document.getElementById("chat-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const input = e.target.message;
+  const msg = input.value.trim();
+  if (!msg) return;
+  state.chat.push({ role: "user", content: msg });
+  renderChat();
+  input.value = "";
+  state.chat.push({ role: "bot", content: "…" });
+  renderChat();
+  try {
+    const r = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg }),
+    });
+    state.chat.pop();
+    if (!r.ok) {
+      state.chat.push({ role: "bot", content: "(chat error)" });
+    } else {
+      const j = await r.json();
+      state.chat.push({ role: "bot", content: j.reply });
+    }
+  } catch {
+    state.chat.pop();
+    state.chat.push({ role: "bot", content: "(network error)" });
+  }
+  renderChat();
+});
+
+loadFx().then(loadPortfolio);
+setInterval(loadPortfolio, 30000);
+setInterval(loadFx, 300000);
+</script>
+</body>
+</html>
