@@ -136,6 +136,12 @@
   }
   input::placeholder { color: var(--placeholder); }
   input[type="number"], input[type="date"] { font-family: ui-monospace, Menlo, monospace; }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
   [data-theme="dark"] input[type="date"] { color-scheme: dark; }
   button {
     background: var(--primary);
