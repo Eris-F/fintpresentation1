@@ -58,6 +58,9 @@ init_db()
 _price_cache: dict[str, tuple[float, float | None]] = {}
 PRICE_TTL = 60.0
 
+_history_cache: dict[tuple[str, int], tuple[float, list[float]]] = {}
+HISTORY_TTL = 300.0
+
 
 def get_price(ticker: str) -> float | None:
     now = time.time()
@@ -138,6 +141,29 @@ def delete_holding(hid: int):
 
 
 # ---------- Prices ----------
+
+@app.get("/history")
+def history(ticker: str, days: int = 30):
+    ticker = ticker.strip().upper()
+    days = max(5, min(days, 365))
+    now = time.time()
+    key = (ticker, days)
+    cached = _history_cache.get(key)
+    if cached and now - cached[0] < HISTORY_TTL:
+        return {"ticker": ticker, "closes": cached[1]}
+
+    closes: list[float] = []
+    try:
+        # pull a bit extra for weekends/holidays, then keep last `days` closes
+        hist = yf.Ticker(ticker).history(period=f"{days + 15}d")
+        if not hist.empty:
+            closes = [float(x) for x in hist["Close"].dropna().tolist()[-days:]]
+    except Exception:
+        closes = []
+
+    _history_cache[key] = (now, closes)
+    return {"ticker": ticker, "closes": closes}
+
 
 @app.get("/prices")
 def prices(tickers: str):

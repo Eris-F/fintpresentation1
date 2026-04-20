@@ -5,30 +5,84 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Portfolio Tracker</title>
 <style>
+  :root {
+    --bg: #fafafa;
+    --fg: #222;
+    --muted: #666;
+    --panel: #fff;
+    --panel-border: #e4e4e4;
+    --header-border: #ddd;
+    --row-border: #eee;
+    --th-bg: #f7f7f7;
+    --th-fg: #555;
+    --row-hover: #fafbfc;
+    --input-border: #ccc;
+    --primary: #1f6feb;
+    --primary-hover: #1a5ed1;
+    --secondary: #eee;
+    --secondary-hover: #ddd;
+    --pos: #1a7f37;
+    --neg: #cf222e;
+    --zero: #666;
+    --code-bg: #e9ecef;
+    --pre-bg: #f3f4f6;
+    --chat-bg: #fcfcfc;
+    --msg-user: #dbeafe;
+    --msg-bot: #f0f0f0;
+    --input-bg: #fff;
+    --placeholder: #9aa0a6;
+  }
+  [data-theme="dark"] {
+    --bg: #0d1117;
+    --fg: #e6edf3;
+    --muted: #8b949e;
+    --panel: #161b22;
+    --panel-border: #30363d;
+    --header-border: #30363d;
+    --row-border: #21262d;
+    --th-bg: #1c2128;
+    --th-fg: #c9d1d9;
+    --row-hover: #1c2128;
+    --input-border: #30363d;
+    --primary: #2f81f7;
+    --primary-hover: #4493f8;
+    --secondary: #30363d;
+    --secondary-hover: #3d444d;
+    --pos: #3fb950;
+    --neg: #f85149;
+    --zero: #8b949e;
+    --code-bg: #1c2128;
+    --pre-bg: #010409;
+    --chat-bg: #0d1117;
+    --msg-user: #1f3a5f;
+    --msg-bot: #21262d;
+    --input-bg: #0d1117;
+    --placeholder: #6e7681;
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: #222;
-    background: #fafafa;
+    color: var(--fg);
+    background: var(--bg);
   }
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 16px 24px;
-    border-bottom: 1px solid #ddd;
-    background: #fff;
+    border-bottom: 1px solid var(--header-border);
+    background: var(--panel);
     flex-wrap: wrap;
     gap: 12px;
   }
   header h1 { margin: 0; font-size: 20px; }
   .totals { display: flex; gap: 24px; align-items: center; font-size: 14px; }
-  .totals span.label { color: #666; margin-right: 6px; }
+  .totals span.label { color: var(--muted); margin-right: 6px; }
   .num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-  .pos { color: #1a7f37; }
-  .neg { color: #cf222e; }
-  .zero { color: #666; }
+  .pos { color: var(--pos); }
+  .neg { color: var(--neg); }
+  .zero { color: var(--zero); }
   main {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -41,8 +95,8 @@
     main { grid-template-columns: 1fr; }
   }
   section {
-    background: #fff;
-    border: 1px solid #e4e4e4;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
     border-radius: 6px;
     padding: 16px;
   }
@@ -51,19 +105,19 @@
   th, td {
     padding: 8px 10px;
     text-align: right;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--row-border);
   }
   th:first-child, td:first-child { text-align: left; }
-  th { font-weight: 600; color: #555; background: #f7f7f7; }
-  tbody tr:hover { background: #fafbfc; }
+  th { font-weight: 600; color: var(--th-fg); background: var(--th-bg); }
+  tbody tr:hover { background: var(--row-hover); }
   .del {
     background: none;
     border: none;
-    color: #888;
+    color: var(--muted);
     cursor: pointer;
     font-size: 16px;
   }
-  .del:hover { color: #cf222e; }
+  .del:hover { color: var(--neg); }
   form.inline {
     display: flex;
     flex-wrap: wrap;
@@ -73,43 +127,57 @@
   }
   input, select, button {
     padding: 6px 10px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--input-border);
     border-radius: 4px;
     font-size: 14px;
     font-family: inherit;
+    background: var(--input-bg);
+    color: var(--fg);
   }
+  input::placeholder { color: var(--placeholder); }
   input[type="number"], input[type="date"] { font-family: ui-monospace, Menlo, monospace; }
+  [data-theme="dark"] input[type="date"] { color-scheme: dark; }
   button {
-    background: #1f6feb;
+    background: var(--primary);
     color: #fff;
     border: none;
     cursor: pointer;
   }
-  button:hover { background: #1a5ed1; }
-  button.secondary { background: #eee; color: #222; }
-  button.secondary:hover { background: #ddd; }
-  .err { color: #cf222e; font-size: 13px; }
+  button:hover { background: var(--primary-hover); }
+  button.secondary { background: var(--secondary); color: var(--fg); }
+  button.secondary:hover { background: var(--secondary-hover); }
+  .err { color: var(--neg); font-size: 13px; }
   .toggle {
     display: inline-flex;
-    border: 1px solid #ccc;
+    border: 1px solid var(--input-border);
     border-radius: 4px;
     overflow: hidden;
   }
   .toggle button {
-    background: #fff;
-    color: #222;
+    background: var(--panel);
+    color: var(--fg);
     border: none;
     border-radius: 0;
     padding: 4px 10px;
   }
-  .toggle button.active { background: #1f6feb; color: #fff; }
+  .toggle button.active { background: var(--primary); color: #fff; }
+  .icon-btn {
+    background: var(--panel);
+    color: var(--fg);
+    border: 1px solid var(--input-border);
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .icon-btn:hover { background: var(--secondary); }
   #chat-thread {
     height: 360px;
     overflow-y: auto;
-    border: 1px solid #eee;
+    border: 1px solid var(--row-border);
     padding: 10px;
     border-radius: 4px;
-    background: #fcfcfc;
+    background: var(--chat-bg);
     font-size: 14px;
     display: flex;
     flex-direction: column;
@@ -119,13 +187,16 @@
   .msg p { margin: 0 0 6px; }
   .msg p:last-child { margin-bottom: 0; }
   .msg ul, .msg ol { margin: 4px 0; padding-left: 22px; }
-  .msg code { background: #e9ecef; padding: 1px 4px; border-radius: 3px; font-size: 13px; font-family: ui-monospace, Menlo, monospace; }
-  .msg pre { background: #f3f4f6; padding: 8px; border-radius: 4px; overflow-x: auto; margin: 6px 0; }
+  .msg code { background: var(--code-bg); padding: 1px 4px; border-radius: 3px; font-size: 13px; font-family: ui-monospace, Menlo, monospace; }
+  .msg pre { background: var(--pre-bg); padding: 8px; border-radius: 4px; overflow-x: auto; margin: 6px 0; }
   .msg pre code { background: none; padding: 0; }
   .msg h1, .msg h2, .msg h3 { margin: 6px 0 4px; font-size: 14px; }
   .msg strong { font-weight: 600; }
-  .msg.user { background: #dbeafe; align-self: flex-end; }
-  .msg.bot { background: #f0f0f0; align-self: flex-start; }
+  .msg.user { background: var(--msg-user); align-self: flex-end; }
+  .msg.bot { background: var(--msg-bot); align-self: flex-start; }
+  .spark-cell { text-align: center; padding: 2px 6px; }
+  .spark { display: block; width: 100px; height: 28px; }
+  .spark-empty { color: var(--muted); font-size: 12px; }
   .chat-input { display: flex; gap: 8px; margin-top: 10px; }
   .chat-input input { flex: 1; }
   .whatif-result { margin-top: 10px; font-size: 14px; font-family: ui-monospace, Menlo, monospace; }
@@ -143,6 +214,7 @@
       <button id="btn-usd" class="active" onclick="setCurrency('USD')">USD</button>
       <button id="btn-eur" onclick="setCurrency('EUR')">EUR</button>
     </div>
+    <button id="theme-toggle" class="icon-btn" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
   </div>
 </header>
 
@@ -156,6 +228,7 @@
           <th>Shares</th>
           <th>Avg Cost</th>
           <th>Price</th>
+          <th>30d</th>
           <th>Value</th>
           <th>P/L</th>
           <th>P/L %</th>
@@ -163,7 +236,7 @@
         </tr>
       </thead>
       <tbody id="holdings-body">
-        <tr><td colspan="8" style="text-align:center;color:#888">Loading…</td></tr>
+        <tr><td colspan="9" style="text-align:center;color:var(--muted)">Loading…</td></tr>
       </tbody>
     </table>
 
@@ -236,7 +309,25 @@ let state = {
   currency: "USD",
   rate: 1.0,            // USD -> EUR
   chat: [],
+  history: {},          // ticker -> [close prices]
 };
+
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  document.getElementById("theme-toggle").textContent = t === "dark" ? "☀️" : "🌙";
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute("data-theme") || "light";
+  const next = cur === "dark" ? "light" : "dark";
+  localStorage.setItem("theme", next);
+  applyTheme(next);
+  render();
+}
+(function initTheme() {
+  const saved = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  applyTheme(saved || (prefersDark ? "dark" : "light"));
+})();
 
 function fmt(n, currency) {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
@@ -263,6 +354,41 @@ async function loadPortfolio() {
   const r = await fetch("/portfolio");
   state.portfolio = await r.json();
   render();
+  loadHistories();
+}
+async function loadHistories() {
+  const tickers = state.portfolio?.holdings?.map(h => h.ticker) || [];
+  const missing = tickers.filter(t => !(t in state.history));
+  if (!missing.length) return;
+  await Promise.all(missing.map(async t => {
+    try {
+      const r = await fetch(`/history?ticker=${encodeURIComponent(t)}&days=30`);
+      if (!r.ok) { state.history[t] = []; return; }
+      const j = await r.json();
+      state.history[t] = j.closes || [];
+    } catch { state.history[t] = []; }
+  }));
+  render();
+}
+function sparkline(closes) {
+  if (!closes || closes.length < 2) return '<span class="spark-empty">—</span>';
+  const w = 100, h = 28, pad = 2;
+  const min = Math.min(...closes);
+  const max = Math.max(...closes);
+  const range = max - min || 1;
+  const n = closes.length;
+  const pts = closes.map((v, i) => {
+    const x = pad + (i / (n - 1)) * (w - pad * 2);
+    const y = h - pad - ((v - min) / range) * (h - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  const up = closes[n - 1] >= closes[0];
+  const color = up ? "var(--pos)" : "var(--neg)";
+  const areaPts = `${pad},${h} ${pts} ${w - pad},${h}`;
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polygon points="${areaPts}" fill="${color}" opacity="0.15"/>
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"/>
+  </svg>`;
 }
 async function loadFx() {
   try {
@@ -279,7 +405,7 @@ function render() {
   const body = document.getElementById("holdings-body");
 
   if (!p || p.holdings.length === 0) {
-    body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888">No holdings yet.</td></tr>';
+    body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted)">No holdings yet.</td></tr>';
   } else {
     body.innerHTML = p.holdings.map(h => {
       const price = convert(h.current_price);
@@ -293,6 +419,7 @@ function render() {
           <td class="num">${h.shares}</td>
           <td class="num">${fmt(cost, cur)}</td>
           <td class="num">${fmt(price, cur)}</td>
+          <td class="spark-cell">${sparkline(state.history[h.ticker])}</td>
           <td class="num">${fmt(value, cur)}</td>
           <td class="num ${plc}">${fmt(pl, cur)}</td>
           <td class="num ${plc}">${fmtPct(h.pl_percent)}</td>
